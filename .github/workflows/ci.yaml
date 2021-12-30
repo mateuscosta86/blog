@@ -23,10 +23,73 @@ jobs:
           mix local.rebar --force
           mix local.hex --force
           mix deps.get
+
+  lint:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: erlef/setup-beam@v1.9.0
+        with:
+          otp-version: '24.0'
+          elixir-version: '1.13.0'
+      - name: Restore dependencies cache
+        id: mix-cache
+        uses: actions/cache@v2
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
       - name: Check Formatting
         run: mix format --check-formatted
       - name: Lint Code
         run: mix credo --strict
+
+  security:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: erlef/setup-beam@v1.9.0
+        with:
+          otp-version: '24.0'
+          elixir-version: '1.13.0'
+      - name: Restore dependencies cache
+        id: mix-cache
+        uses: actions/cache@v2
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
       - name: Sobelow Check
         run: mix sobelow --config
 
+  coveralls:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: erlef/setup-beam@v1.9.0
+        with:
+          otp-version: '24.0'
+          elixir-version: '1.13.0'
+      - name: Restore dependencies cache
+        id: mix-cache
+        uses: actions/cache@v2
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+       - name: coveralls
+        run: mix coveralls.json
+      - uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+    services:
+      pg:
+        image: postgres:12
+        ports: ['5432:5432']
+        env:
+          POSTGRES_PASSWORD: postgres
+          options: >-
+            --health-cmd pg_isready
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5s
