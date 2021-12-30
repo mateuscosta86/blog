@@ -28,4 +28,4 @@ jobs:
       - name: Lint Code
         run: mix credo --strict
       - name: Sobelow Check
-        run: mix credo --strict
+        run: mix sobelow --config
