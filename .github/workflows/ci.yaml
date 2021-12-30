@@ -10,7 +10,7 @@ jobs:
       - uses: erlef/setup-beam@v1
         with:
           otp-version: '24.0'
-          elixir-versions: '1.13.0'
+          elixir-version: '1.13.0'
       - name: get deps
         run: mix deps.get
       - name: lint code
